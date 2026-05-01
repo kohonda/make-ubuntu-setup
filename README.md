@@ -86,8 +86,7 @@ bash scripts/60-fcitx5-mozc.sh
 └── config/
     └── fcitx5/
         ├── profile             # mozc を default IM に
-        └── conf/
-            └── default.conf    # Henkan/Muhenkan キー割り当て
+        └── config              # Henkan/Muhenkan キー割り当て (global hotkey)
 ```
 
 ## トラブルシュート

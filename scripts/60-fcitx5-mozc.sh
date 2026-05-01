@@ -32,7 +32,7 @@ fi
 
 # Per-user fcitx5 config. Skip when files already exist to respect customizations.
 USER_CONF_DIR="${HOME}/.config/fcitx5"
-mkdir -p "${USER_CONF_DIR}/conf"
+mkdir -p "${USER_CONF_DIR}"
 
 PROFILE_DST="${USER_CONF_DIR}/profile"
 if [ -e "$PROFILE_DST" ]; then
@@ -42,13 +42,13 @@ else
   install -m 0644 "${SRC_CONFIG}/profile" "$PROFILE_DST"
 fi
 
-# Global hotkeys (Henkan / Muhenkan) live in ~/.config/fcitx5/config, not conf/.
+# Global hotkeys (Henkan / Muhenkan) live in ~/.config/fcitx5/config.
 GLOBAL_DST="${USER_CONF_DIR}/config"
 if [ -e "$GLOBAL_DST" ]; then
   log_info "$GLOBAL_DST already exists, skipping"
 else
   log_info "Installing $GLOBAL_DST"
-  install -m 0644 "${SRC_CONFIG}/conf/default.conf" "$GLOBAL_DST"
+  install -m 0644 "${SRC_CONFIG}/config" "$GLOBAL_DST"
 fi
 
 log_warn "Log out and log back in to activate Fcitx5."
