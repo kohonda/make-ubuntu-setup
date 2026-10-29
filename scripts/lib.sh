@@ -18,12 +18,18 @@ log_info() { printf '%s[INFO]%s %s\n' "$_C_INFO" "$_C_RESET" "$*"; }
 log_warn() { printf '%s[WARN]%s %s\n' "$_C_WARN" "$_C_RESET" "$*" >&2; }
 log_err()  { printf '%s[ERR ]%s %s\n' "$_C_ERR"  "$_C_RESET" "$*" >&2; }
 
+DPKG_STATUS_INSTALLED="install ok installed"
+
 is_installed() {
   command -v "$1" >/dev/null 2>&1
 }
 
+# `dpkg -s` also succeeds for packages in the `rc` state (removed, config files
+# left behind), so check the full status string instead.
 dpkg_installed() {
-  dpkg -s "$1" >/dev/null 2>&1
+  local status
+  status="$(dpkg-query -W -f='${Status}' "$1" 2>/dev/null)" || return 1
+  [ "$status" = "$DPKG_STATUS_INSTALLED" ]
 }
 
 apt_install() {
@@ -41,3 +47,44 @@ apt_install() {
     sudo apt-get install -y "${missing[@]}"
   fi
 }
+
+# Runs in a subshell so the EXIT trap cleans up the download on success and on failure.
+install_deb_from_url() (
+  local url="$1"
+  local workdir
+  workdir="$(mktemp -d)"
+  trap 'rm -rf "$workdir"' EXIT
+  # apt drops privileges to the _apt user to read local .deb files.
+  chmod 0755 "$workdir"
+  local deb="${workdir}/package.deb"
+  log_info "Downloading $url"
+  curl -fsSL -o "$deb" "$url"
+  chmod 0644 "$deb"
+  sudo apt-get install -y "$deb"
+)
+
+# Deletes a file an older version of this installer wrote, but only when it is
+# byte-identical to what that version wrote: a file the user or a package
+# rewrote since is kept.
+remove_if_identical() {
+  local target="$1"
+  local reference="$2"
+  [ -e "$target" ] || return 0
+  if ! cmp -s "$target" "$reference"; then
+    log_warn "$target differs from what an older installer wrote; leaving it in place"
+    return 0
+  fi
+  log_info "Removing legacy $target"
+  sudo rm -f "$target"
+}
+
+# Same as remove_if_identical, for a one-line file written with `echo ... | tee`.
+remove_if_single_line() (
+  local target="$1"
+  local line="$2"
+  local reference
+  reference="$(mktemp)"
+  trap 'rm -f "$reference"' EXIT
+  printf '%s\n' "$line" >"$reference"
+  remove_if_identical "$target" "$reference"
+)
