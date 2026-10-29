@@ -1,10 +1,10 @@
 [Groups/0]
 Name=Default
-Default Layout=us
+Default Layout=@LAYOUT@
 DefaultIM=mozc
 
 [Groups/0/Items/0]
-Name=keyboard-us
+Name=keyboard-@LAYOUT@
 Layout=
 
 [Groups/0/Items/1]
