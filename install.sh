@@ -46,6 +46,20 @@ log_info "Detected $(lsb_release -ds)"
 log_info "Caching sudo credentials"
 sudo -v
 
+# sudo's credential cache expires after ~15 minutes, and a full run takes longer,
+# so refresh it in the background until this script exits.
+SUDO_KEEPALIVE_INTERVAL_SECONDS=60
+keep_sudo_alive() {
+  local parent_pid="$1"
+  while kill -0 "$parent_pid" 2>/dev/null; do
+    sudo -n true
+    sleep "$SUDO_KEEPALIVE_INTERVAL_SECONDS"
+  done
+}
+keep_sudo_alive "$$" >/dev/null 2>&1 &
+SUDO_KEEPALIVE_PID=$!
+trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT
+
 # --- run scripts ---
 should_skip() {
   local script="$1"

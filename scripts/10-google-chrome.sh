@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Google Chrome via official apt repository.
+# Google Chrome via the official .deb. The package registers its own apt source
+# (google-chrome.sources) for updates, so this script writes none.
 # Reference: https://support.google.com/chrome/answer/95346
 
 set -euo pipefail
@@ -7,25 +8,23 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "${SCRIPT_DIR}/lib.sh"
 
-if is_installed google-chrome || is_installed google-chrome-stable; then
-  log_info "google-chrome already installed, skipping"
+CHROME_DEB_URL=https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+CHROME_ARCH=amd64
+LEGACY_LIST=/etc/apt/sources.list.d/google-chrome.list
+LEGACY_LIST_LINE="deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main"
+
+if [ "$(dpkg --print-architecture)" != "$CHROME_ARCH" ]; then
+  log_warn "Google Chrome is only published for ${CHROME_ARCH}, skipping"
   exit 0
 fi
 
-KEYRING=/usr/share/keyrings/google-chrome.gpg
-LIST=/etc/apt/sources.list.d/google-chrome.list
+# The old version of this script wrote this list; together with the package's
+# own google-chrome.sources it registered the repository twice.
+remove_if_single_line "$LEGACY_LIST" "$LEGACY_LIST_LINE"
 
-if [ ! -f "$KEYRING" ]; then
-  log_info "Adding Google signing key"
-  curl -fsSL https://dl.google.com/linux/linux_signing_key.pub \
-    | sudo gpg --dearmor -o "$KEYRING"
+if dpkg_installed google-chrome-stable; then
+  log_info "google-chrome-stable already installed, skipping"
+  exit 0
 fi
 
-if [ ! -f "$LIST" ]; then
-  log_info "Adding Google Chrome apt source"
-  echo "deb [arch=amd64 signed-by=${KEYRING}] https://dl.google.com/linux/chrome/deb/ stable main" \
-    | sudo tee "$LIST" >/dev/null
-fi
-
-sudo apt-get update
-apt_install google-chrome-stable
+install_deb_from_url "$CHROME_DEB_URL"
