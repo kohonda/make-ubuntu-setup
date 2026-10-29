@@ -12,4 +12,5 @@ sudo apt-get update
 apt_install \
   build-essential cmake git curl wget unzip ca-certificates gnupg \
   lsb-release tmux byobu htop ncdu tree jq python3-pip ufw \
-  software-properties-common openssh-server net-tools terminator ffmpeg
+  software-properties-common openssh-server net-tools terminator ffmpeg \
+  ripgrep fd-find fzf git-lfs vim xclip python3-venv pkg-config ninja-build
