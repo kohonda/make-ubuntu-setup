@@ -43,34 +43,34 @@ stop_fcitx5() {
 # Writes $1 to $2, keeping a differing previous file as $2.bak. An identical
 # file is left alone so a re-run does not replace the backup with our own output.
 install_with_backup() {
-  local src="$1"
-  local dst="$2"
-  if cmp -s "$src" "$dst"; then
-    log_info "$dst is up to date"
+  local source_path="$1"
+  local destination_path="$2"
+  if cmp -s "$source_path" "$destination_path"; then
+    log_info "$destination_path is up to date"
     return 0
   fi
-  if [ -e "$dst" ]; then
-    log_info "Backing up $dst to ${dst}.bak"
-    cp -p "$dst" "${dst}.bak"
+  if [ -e "$destination_path" ]; then
+    log_info "Backing up $destination_path to ${destination_path}.bak"
+    cp -p "$destination_path" "${destination_path}.bak"
   fi
-  log_info "Writing $dst"
-  install -m 0644 "$src" "$dst"
+  log_info "Writing $destination_path"
+  install -m 0644 "$source_path" "$destination_path"
 }
 
 # Same as install_with_backup, for a root-owned destination.
 sudo_install_with_backup() {
-  local src="$1"
-  local dst="$2"
-  if cmp -s "$src" "$dst"; then
-    log_info "$dst is up to date"
+  local source_path="$1"
+  local destination_path="$2"
+  if cmp -s "$source_path" "$destination_path"; then
+    log_info "$destination_path is up to date"
     return 0
   fi
-  if [ -e "$dst" ]; then
-    log_info "Backing up $dst to ${dst}.bak"
-    sudo cp -p "$dst" "${dst}.bak"
+  if [ -e "$destination_path" ]; then
+    log_info "Backing up $destination_path to ${destination_path}.bak"
+    sudo cp -p "$destination_path" "${destination_path}.bak"
   fi
-  log_info "Writing $dst"
-  sudo install -D -m 0644 "$src" "$dst"
+  log_info "Writing $destination_path"
+  sudo install -D -m 0644 "$source_path" "$destination_path"
 }
 
 write_im_environment() (

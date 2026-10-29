@@ -18,10 +18,10 @@ CONFLICTING_PACKAGES=(docker.io docker-doc docker-compose docker-compose-v2 podm
 
 remove_conflicting_packages() {
   local installed=()
-  local pkg
-  for pkg in "${CONFLICTING_PACKAGES[@]}"; do
-    if dpkg_installed "$pkg"; then
-      installed+=("$pkg")
+  local package
+  for package in "${CONFLICTING_PACKAGES[@]}"; do
+    if dpkg_installed "$package"; then
+      installed+=("$package")
     fi
   done
   if [ ${#installed[@]} -gt 0 ]; then
