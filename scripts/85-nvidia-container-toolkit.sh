@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# NVIDIA Container Toolkit, on machines with a working NVIDIA driver only.
-# The driver itself is out of scope for this repository.
+# NVIDIA Container Toolkit, on machines with an NVIDIA GPU only.
+# The driver comes from scripts/82-nvidia-driver.sh. Neither installing the toolkit
+# nor configuring docker needs it loaded, so this also runs before the first reboot.
 # Reference: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
 
 set -euo pipefail
@@ -13,8 +14,8 @@ KEYRING_URL=https://nvidia.github.io/libnvidia-container/gpgkey
 LIST=/etc/apt/sources.list.d/nvidia-container-toolkit.list
 LIST_URL=https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list
 
-if ! nvidia-smi >/dev/null 2>&1; then
-  log_warn "nvidia-smi does not work (no NVIDIA GPU or driver), skipping"
+if ! has_nvidia_gpu; then
+  log_warn "No NVIDIA GPU found, skipping"
   exit 0
 fi
 

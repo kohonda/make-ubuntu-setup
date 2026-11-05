@@ -26,7 +26,8 @@ CLI 基本ツール: `ripgrep fd-find fzf git-lfs vim xclip python3-venv pkg-con
 - [GitHub CLI (gh)](https://cli.github.com/) (公式 apt リポジトリ)
 - [Node.js](https://github.com/nodesource/distributions) LTS (NodeSource apt リポジトリ。`node` が既に PATH にあればスキップ)
 - [Docker Engine](https://docs.docker.com/engine/install/ubuntu/) + Buildx + Compose plugin (Docker 公式 apt リポジトリ)
-- [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) (`nvidia-smi` が動く GPU 機のみ。ドライバ自体は入れません)
+- NVIDIA ドライバ (NVIDIA GPU 搭載機のみ。`ubuntu-drivers` の推奨版を入れます。既にドライバが入っていれば何もしません)
+- [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) (NVIDIA GPU 搭載機のみ。ドライバの有効化前でも入ります)
 - [Claude Code](https://docs.claude.com/en/docs/claude-code/setup) (公式インストーラ)
 - [Codex CLI](https://github.com/openai/codex) (公式 standalone インストーラ)
 
@@ -68,6 +69,9 @@ bash install.sh --skip 30-slack
 
 # Docker と NVIDIA Container Toolkit を抜く
 bash install.sh --skip 80 --skip 85
+
+# NVIDIA ドライバだけ抜く
+bash install.sh --skip 82
 ```
 
 ### 個別スクリプトだけ実行したい場合
@@ -98,6 +102,12 @@ Fcitx5 関連の以下のファイルは**毎回書き直します**。内容が
 
 `80-docker.sh` は実行ユーザを `docker` グループに追加します。反映には再ログインが必要です。`docker` グループは実質 root 権限と同等なので、共用マシンでは注意してください。
 
+### NVIDIA ドライバ
+
+`82-nvidia-driver.sh` がドライバを新しく入れた場合、有効化には**再起動が必要**です。再起動するまで `nvidia-smi` は動かず、`install.sh` の最後にも警告が出ます。NVIDIA Container Toolkit は再起動前の初回実行で入るので、再起動後に `install.sh` を再実行する必要はありません。
+
+**Secure Boot が有効な場合**は、再起動してもドライバが読み込まれないことがあります。DKMS でビルドしたモジュールの署名鍵は MOK への登録が必要ですが、インストールは非対話で進むので登録の質問は出ません。`nvidia-smi` が動かなければ `sudo update-secureboot-policy --enroll-key` で鍵を登録して再起動し、起動時の MOK 管理画面で登録を完了してください。
+
 ### snap 版 Slack からの移行
 
 snap 版 Slack は confinement のため fcitx5 のモジュールを読めず、日本語入力ができません。`30-slack.sh` は .deb 版を入れますが、snap 版は自動では削除しません。snap 版が入っていると警告が出るので、.deb 版の動作を確認してから削除してください。
@@ -123,6 +133,7 @@ sudo snap remove slack
 │   ├── 70-gh.sh                     # GitHub CLI
 │   ├── 75-nodejs.sh                 # Node.js LTS
 │   ├── 80-docker.sh                 # Docker Engine + Compose
+│   ├── 82-nvidia-driver.sh          # NVIDIA ドライバ (GPU 機のみ)
 │   ├── 85-nvidia-container-toolkit.sh  # NVIDIA Container Toolkit (GPU 機のみ)
 │   ├── 90-claude-code.sh            # Claude Code
 │   └── 95-codex.sh                  # Codex CLI

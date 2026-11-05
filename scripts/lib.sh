@@ -20,6 +20,11 @@ log_err()  { printf '%s[ERR ]%s %s\n' "$_C_ERR"  "$_C_RESET" "$*" >&2; }
 
 DPKG_STATUS_INSTALLED="install ok installed"
 
+PCI_DEVICES_DIR="${PCI_DEVICES_DIR:-/sys/bus/pci/devices}"
+NVIDIA_PCI_VENDOR_ID="0x10de"
+# Display controllers only: an NVIDIA GPU's audio function has class 0x0403xx.
+PCI_CLASS_DISPLAY_PREFIX="0x03"
+
 is_installed() {
   command -v "$1" >/dev/null 2>&1
 }
@@ -30,6 +35,24 @@ dpkg_installed() {
   local status
   status="$(dpkg-query -W -f='${Status}' "$1" 2>/dev/null)" || return 1
   [ "$status" = "$DPKG_STATUS_INSTALLED" ]
+}
+
+# Reads sysfs so that it works before pciutils and the driver are installed.
+has_nvidia_gpu() {
+  local device
+  for device in "$PCI_DEVICES_DIR"/*; do
+    [ -r "$device/vendor" ] || continue
+    [ -r "$device/class" ] || continue
+    [ "$(<"$device/vendor")" = "$NVIDIA_PCI_VENDOR_ID" ] || continue
+    case "$(<"$device/class")" in
+      "$PCI_CLASS_DISPLAY_PREFIX"*) return 0 ;;
+    esac
+  done
+  return 1
+}
+
+nvidia_smi_works() {
+  nvidia-smi >/dev/null 2>&1
 }
 
 apt_install() {
