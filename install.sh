@@ -96,3 +96,7 @@ log_info "Setup complete."
 log_info "Ran:     ${ran[*]:-<none>}"
 log_info "Skipped: ${skipped[*]:-<none>}"
 log_warn "Log out and log back in (or reboot) to apply IME and PATH changes."
+# Repeats the warning from 82-nvidia-driver, which is buried in the log by now.
+if has_nvidia_gpu && ! nvidia_smi_works; then
+  log_warn "Reboot to activate the NVIDIA driver (nvidia-smi does not work yet)."
+fi
